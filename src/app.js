@@ -9,35 +9,21 @@ app.get("/random.text", (req, res) => {
   res.send("random.text");
 });
 
-// This route path will match acd and abcd.
-app.get("/ab?cd", (req, res) => {
-  res.send("ab?cd");
+// url: http://localhost:3000/users/34/books/8989
+app.get("/users/:userId/books/:bookId", (req, res) => {
+  console.log(req.params);
+  res.send(req.params); // { "userId": "34", "bookId": "8989" }
 });
 
-// This route path will match abcd, abbcd, abbbcd, and so on.
-app.get("/ab+cd", (req, res) => {
-  res.send("ab+cd");
+// url: http://localhost:3000/flights/mumbai-banglore
+app.get("/flights/:from-:to", (req, res) => {
+  res.send(req.params); // { "from": "mumbai", "to": "banglore" }
 });
 
-//This route path will match abcd, abxcd, abRANDOMcd, ab123cd, and so on.
-app.get("/xy*zz", (req, res) => {
-  res.send("xy*zz");
-});
-
-//This route path will match /abe and /abcde.
-app.get("/ab(cd)?e", (req, res) => {
-  res.send("ab(cd)?e");
-});
-
-// This route path will match anything with an “a” in it.
-app.get("/a/", (req, res) => {
-  res.send("/a/");
-});
-
-// This route path will match butterfly and dragonfly, but not butterflyman, dragonflyman, and so on.
-app.get(".*fly$/", (req, res) => {
-  res.send("/.*fly/");
+// url: http://localhost:3000/plantae/Prunus.persica
+app.get("/plantae/:genus.:species", (req, res) => {
+  res.send(req.params); // { "genus": "Prunus", "species": "persica" }
 });
 
 // server listens at port 77777
-app.listen(7777);
+app.listen(8888);
