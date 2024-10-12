@@ -4,34 +4,40 @@ const express = require("express");
 // create express instance
 const app = express();
 
-// This will only handle GET call to /user
-app.get("/user", (req, res) => {
-  // handle logic to send data from db to client
-  res.send({ firstName: "Venky", lastName: "Raj" });
+// This route path will match requests to /random.text
+app.get("/random.text", (req, res) => {
+  res.send("random.text");
 });
 
-// This will only handle POST call to /user
-app.post("/user", (req, res) => {
-  // handle logic to store data in DB
-  res.send("data saved successfully");
+// This route path will match acd and abcd.
+app.get("/ab?cd", (req, res) => {
+  res.send("ab?cd");
 });
 
-// This will only handle PUT call to /user
-app.put("/user", (req, res) => {
-  // handle logic to update the user in DB
-  res.send("data updates successfully");
+// This route path will match abcd, abbcd, abbbcd, and so on.
+app.get("/ab+cd", (req, res) => {
+  res.send("ab+cd");
 });
 
-// This will only handle PATCH call to /user
-app.patch("/user", (req, res) => {
-  // handle logic to patch
-  res.send("patch updated successfully");
+//This route path will match abcd, abxcd, abRANDOMcd, ab123cd, and so on.
+app.get("/xy*zz", (req, res) => {
+  res.send("xy*zz");
 });
 
-// This will only handle DELETE call to /user
-app.delete("/user", (req, res) => {
-  // handle delete logic
-  res.send("user deleted succefully");
+//This route path will match /abe and /abcde.
+app.get("/ab(cd)?e", (req, res) => {
+  res.send("ab(cd)?e");
 });
+
+// This route path will match anything with an “a” in it.
+app.get("/a/", (req, res) => {
+  res.send("/a/");
+});
+
+// This route path will match butterfly and dragonfly, but not butterflyman, dragonflyman, and so on.
+app.get(".*fly$/", (req, res) => {
+  res.send("/.*fly/");
+});
+
 // server listens at port 77777
 app.listen(7777);
