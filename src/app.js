@@ -4,16 +4,21 @@ const express = require("express");
 // create express instance
 const app = express();
 
-const { adminAuth } = require("./middlewares/adminAuth");
-
-app.use("/admin", adminAuth);
-
-app.get("/admin/getAllData", (req, res) => {
-  res.send("sent all data to admin!!");
+// error handling using try and catch
+app.get("/user", (req, res) => {
+  try {
+    throw new Error("sampe error");
+    res.send("user handler!!!");
+  } catch (e) {
+    res.status(500).send("something went wrong!!");
+  }
 });
 
-app.post("/admin/deleteUser", (req, res) => {
-  res.send("user deleted successfully!!!");
+// erro handling using app.use() and err object
+app.use("/", (err, req, res, next) => {
+  if (err) {
+    res.status(500).send("something went wrong!!");
+  }
 });
 // server listens at port 77777
 app.listen(8888);
