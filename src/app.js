@@ -1,24 +1,31 @@
-// import express
 const express = require("express");
-
-// create express instance
+const connectDB = require("./config/database.js");
 const app = express();
+const User = require("./model/user.js");
 
-// error handling using try and catch
-app.get("/user", (req, res) => {
+app.post("/singup", async (req, res) => {
+  const user = new User({
+    firstName: "Rakesh",
+    lastName: "Raj",
+    email: "Raj@gmail.com",
+    password: "Raj@123",
+  });
+
   try {
-    throw new Error("sampe error");
-    res.send("user handler!!!");
-  } catch (e) {
-    res.status(500).send("something went wrong!!");
+    await user.save();
+    res.send("User created successfully...");
+  } catch (err) {
+    res.status(400).send("Something went wrong!!!");
   }
 });
 
-// erro handling using app.use() and err object
-app.use("/", (err, req, res, next) => {
-  if (err) {
-    res.status(500).send("something went wrong!!");
-  }
-});
-// server listens at port 77777
-app.listen(8888);
+connectDB()
+  .then(() => {
+    console.log("DB connection made successfully...");
+    app.listen(8888, () => {
+      console.log("application started on port:8888 successfully");
+    });
+  })
+  .catch((err) => {
+    console.error("DB conncetion failed!!!!");
+  });
