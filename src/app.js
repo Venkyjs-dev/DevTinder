@@ -1,7 +1,23 @@
 const express = require("express");
 const connectDB = require("./config/database.js");
-
 const app = express();
+const User = require("./model/user.js");
+
+app.post("/singup", async (req, res) => {
+  try {
+    const user = new User({
+      firstName: "Rakesh",
+      lastName: "Raj",
+      email: "Raj@gmail.com",
+      password: "Raj@123",
+    });
+
+    await user.save();
+    res.send("User created successfully...");
+  } catch (err) {
+    res.send("Something went wrong!!!");
+  }
+});
 
 connectDB()
   .then(() => {
