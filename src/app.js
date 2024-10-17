@@ -3,19 +3,72 @@ const connectDB = require("./config/database.js");
 const app = express();
 const User = require("./model/user.js");
 
-app.post("/singup", async (req, res) => {
-  const user = new User({
-    firstName: "Rakesh",
-    lastName: "Raj",
-    email: "Raj@gmail.com",
-    password: "Raj@123",
-  });
+app.use(express.json());
 
+app.post("/singup", async (req, res) => {
   try {
+    const user = new User(req.body);
     await user.save();
     res.send("User created successfully...");
   } catch (err) {
     res.status(400).send("Something went wrong!!!");
+  }
+});
+
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({});
+    if (users.length === 0) {
+      res.status(401).send("Users not found!!");
+    } else {
+      res.send(users);
+    }
+  } catch (error) {
+    res.status(401).send("something went wrong!!!");
+  }
+});
+
+app.get("/user", async (req, res) => {
+  try {
+    const emailId = req.body;
+    const users = await User.find(emailId);
+    if (users.length === 0) {
+      res.status(401).send("User not found!!!");
+    } else {
+      res.send(users);
+    }
+  } catch (err) {
+    res.status(401).send("User not found!!!");
+  }
+});
+
+app.patch("/user", async (req, res) => {
+  try {
+    const { emailId, ...updates } = req.body;
+    const result = await User.updateOne({ emailId: emailId }, updates);
+
+    if (result.modifiedCount === 0) {
+      res.status(404).send("User not found or no changes made");
+    }
+
+    res.status(200).send("User updated successfully");
+  } catch (e) {
+    res.status(500).send("Error updating user");
+  }
+});
+
+app.delete("/user", async (req, res) => {
+  try {
+    const emailId = req.body;
+    const result = await User.deleteOne(emailId);
+
+    if (result.deletedCount === 0) {
+      res.status(404).send("User not found or no deleted ");
+    } else {
+      res.status(200).send("user deleted...");
+    }
+  } catch (e) {
+    res.status(500).send("Error Deleting user");
   }
 });
 
