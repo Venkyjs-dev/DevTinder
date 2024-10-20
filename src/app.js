@@ -11,7 +11,13 @@ app.post("/singup", async (req, res) => {
     await user.save();
     res.send("User created successfully...");
   } catch (err) {
-    res.status(400).send("Something went wrong!!!");
+    if (err.code === 11000) {
+      res
+        .status(400)
+        .send("Email ID already exists. Please use a different email.");
+    } else {
+      res.status(400).send(`Some problem: ${err.message}`);
+    }
   }
 });
 
@@ -45,15 +51,17 @@ app.get("/user", async (req, res) => {
 app.patch("/user", async (req, res) => {
   try {
     const { emailId, ...updates } = req.body;
-    const result = await User.updateOne({ emailId: emailId }, updates);
+    const result = await User.updateOne({ emailId: emailId }, updates, {
+      runValidators: true,
+    });
 
     if (result.modifiedCount === 0) {
       res.status(404).send("User not found or no changes made");
+    } else {
+      res.status(200).send("User updated successfully");
     }
-
-    res.status(200).send("User updated successfully");
   } catch (e) {
-    res.status(500).send("Error updating user");
+    res.status(500).send(`Error updating user: ${e.message}`);
   }
 });
 
