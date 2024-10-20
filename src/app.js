@@ -2,10 +2,13 @@ const express = require("express");
 const connectDB = require("./config/database.js");
 const app = express();
 const User = require("./model/user.js");
+const {
+  sanitizeUserSingupData,
+} = require("./middlewares/sanitizeSignUpAPI.js");
 
 app.use(express.json());
 
-app.post("/singup", async (req, res) => {
+app.post("/singup", sanitizeUserSingupData, async (req, res) => {
   try {
     const user = new User(req.body);
     await user.save();
@@ -48,10 +51,21 @@ app.get("/user", async (req, res) => {
   }
 });
 
-app.patch("/user", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
   try {
-    const { emailId, ...updates } = req.body;
-    const result = await User.updateOne({ emailId: emailId }, updates, {
+    const userId = req.params?.userId;
+    const data = req.body;
+    const ALLOW_UPDATE = ["skills", "about", "gender"];
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOW_UPDATE.includes(k)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed");
+    }
+    if (data?.skills.length > 10) {
+      throw new Error("Skill should be less than 10");
+    }
+    const result = await User.findByIdAndUpdate({ _id: userId }, data, {
       runValidators: true,
     });
 
