@@ -2,15 +2,28 @@ const express = require("express");
 const connectDB = require("./config/database.js");
 const app = express();
 const User = require("./model/user.js");
-const {
-  sanitizeUserSingupData,
-} = require("./middlewares/sanitizeSignUpAPI.js");
+const { validateSignUpData } = require("./utils/validation.js");
+const bcrypt = require("bcrypt");
+const validator = require("validator");
 
 app.use(express.json());
 
-app.post("/singup", sanitizeUserSingupData, async (req, res) => {
+app.post("/singup", async (req, res) => {
   try {
-    const user = new User(req.body);
+    const { firstName, lastName, emailId, password } = req.body;
+    // validate req.body
+    validateSignUpData(req);
+
+    // encrypt password using bcrypt package
+    const passwordHash = await bcrypt.hash(password, 10);
+    console.log(passwordHash);
+
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
     await user.save();
     res.send("User created successfully...");
   } catch (err) {
@@ -19,8 +32,32 @@ app.post("/singup", sanitizeUserSingupData, async (req, res) => {
         .status(400)
         .send("Email ID already exists. Please use a different email.");
     } else {
-      res.status(400).send(`Some problem: ${err.message}`);
+      res.status(400).send(`Error : ${err.message}`);
     }
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    if (!validator.isEmail(emailId)) {
+      throw new Error("Invalid creditinals");
+    }
+
+    const user = await User.findOne({ emailId: emailId });
+
+    if (!user) {
+      throw new Error("Invalid creditials");
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new Error("Invalid creditentials");
+    } else {
+      res.send("Login successfull!!!");
+    }
+  } catch (e) {
+    res.status(400).send("Error : " + e.message);
   }
 });
 
