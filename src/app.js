@@ -86,9 +86,9 @@ app.get("/profile", async (req, res) => {
 
     // authentication step 7: verify the received token, is it correct or not using jwt.verify method
     const decoded = jwt.verify(token, "JAVASCRIPT@123");
-    const id = decoded._id;
 
     // authentication step 8: take the info: id from the decoded, then write a query and send the requested data to client;
+    const id = decoded._id;
     const user = await User.findById(id);
 
     if (!user) {
