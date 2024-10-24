@@ -6,7 +6,16 @@ const { validateSignUpData } = require("./utils/validation.js");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 
+// authentication step 1: install cookie-parser package
+const cookieParser = require("cookie-parser");
+
+// authentication step 2: install jsonwebtoken package
+const jwt = require("jsonwebtoken");
+
 app.use(express.json());
+
+// authentication step 3: add cookieParser middle to all the requests
+app.use(cookieParser());
 
 app.post("/singup", async (req, res) => {
   try {
@@ -54,10 +63,41 @@ app.post("/login", async (req, res) => {
     if (!isPasswordValid) {
       throw new Error("Invalid creditentials");
     } else {
+      // authentication step 4: create jwt token, by passing id info and secreat key
+      const _id = user._id;
+      const jwtToken = jwt.sign({ _id: _id }, "JAVASCRIPT@123");
+
+      // authentication step 5: put the token in cookie and send to client
+      res.cookie("token", jwtToken);
       res.send("Login successfull!!!");
     }
   } catch (e) {
     res.status(400).send("Error : " + e.message);
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+    // authentication step 6: receive the cookie from client, when client hit the API
+    const { token } = req.cookies;
+    if (!token) {
+      throw new Error("Invalid Token!!!");
+    }
+
+    // authentication step 7: verify the received token, is it correct or not using jwt.verify method
+    const decoded = jwt.verify(token, "JAVASCRIPT@123");
+    const id = decoded._id;
+
+    // authentication step 8: take the info: id from the decoded, then write a query and send the requested data to client;
+    const user = await User.findById(id);
+
+    if (!user) {
+      throw new Error("User not found!!!");
+    }
+
+    res.send(user);
+  } catch (e) {
+    res.status(400).send("ERROR: " + e.message);
   }
 });
 
