@@ -2,15 +2,37 @@ const express = require("express");
 const connectDB = require("./config/database.js");
 const app = express();
 const User = require("./model/user.js");
-const {
-  sanitizeUserSingupData,
-} = require("./middlewares/sanitizeSignUpAPI.js");
+const { validateSignUpData } = require("./utils/validation.js");
+const bcrypt = require("bcrypt");
+const validator = require("validator");
+
+// authentication step 1: install cookie-parser package
+const cookieParser = require("cookie-parser");
+
+// authentication step 2: install jsonwebtoken package
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
 
-app.post("/singup", sanitizeUserSingupData, async (req, res) => {
+// authentication step 3: add cookieParser middle to all the requests
+app.use(cookieParser());
+
+app.post("/singup", async (req, res) => {
   try {
-    const user = new User(req.body);
+    const { firstName, lastName, emailId, password } = req.body;
+    // validate req.body
+    validateSignUpData(req);
+
+    // encrypt password using bcrypt package
+    const passwordHash = await bcrypt.hash(password, 10);
+    console.log(passwordHash);
+
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
     await user.save();
     res.send("User created successfully...");
   } catch (err) {
@@ -19,8 +41,63 @@ app.post("/singup", sanitizeUserSingupData, async (req, res) => {
         .status(400)
         .send("Email ID already exists. Please use a different email.");
     } else {
-      res.status(400).send(`Some problem: ${err.message}`);
+      res.status(400).send(`Error : ${err.message}`);
     }
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    if (!validator.isEmail(emailId)) {
+      throw new Error("Invalid creditinals");
+    }
+
+    const user = await User.findOne({ emailId: emailId });
+
+    if (!user) {
+      throw new Error("Invalid creditials");
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new Error("Invalid creditentials");
+    } else {
+      // authentication step 4: create jwt token, by passing id info and secreat key
+      const _id = user._id;
+      const jwtToken = jwt.sign({ _id: _id }, "JAVASCRIPT@123");
+
+      // authentication step 5: put the token in cookie and send to client
+      res.cookie("token", jwtToken);
+      res.send("Login successfull!!!");
+    }
+  } catch (e) {
+    res.status(400).send("Error : " + e.message);
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+    // authentication step 6: receive the cookie from client, when client hit the API
+    const { token } = req.cookies;
+    if (!token) {
+      throw new Error("Invalid Token!!!");
+    }
+
+    // authentication step 7: verify the received token, is it correct or not using jwt.verify method
+    const decoded = jwt.verify(token, "JAVASCRIPT@123");
+
+    // authentication step 8: take the info: id from the decoded, then write a query and send the requested data to client;
+    const id = decoded._id;
+    const user = await User.findById(id);
+
+    if (!user) {
+      throw new Error("User not found!!!");
+    }
+
+    res.send(user);
+  } catch (e) {
+    res.status(400).send("ERROR: " + e.message);
   }
 });
 
