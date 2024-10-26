@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
@@ -52,5 +54,34 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// alwasy use function declarion or function express. don't user arrow functions, it won't work.
+userSchema.methods.getJWT = async function () {
+  try {
+    const user = this;
+    const jwtToken = await jwt.sign({ _id: user._id }, "JAVASCRIPT@123", {
+      expiresIn: "7d",
+    });
+    return jwtToken;
+  } catch (e) {
+    console.log("ERROR: " + e.messasge);
+  }
+};
+
+userSchema.methods.validateUserPassword = async function (userInputPassword) {
+  try {
+    const user = this;
+    const passwordHash = user.password;
+
+    const isPasswordValid = await bcrypt.compare(
+      userInputPassword,
+      passwordHash
+    );
+
+    return isPasswordValid;
+  } catch (e) {
+    console.log("ERROR: " + e.messasge);
+  }
+};
 
 module.exports = mongoose.model("User", userSchema);

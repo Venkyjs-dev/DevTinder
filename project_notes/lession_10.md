@@ -9,6 +9,8 @@
 5. The server checks the validity of the token inside the cookie for every request. If valid, it sends a response; if not, it denies access.
 6. write a auth middle ware and use that middle ware in the apis, which are needs to authencated.
 7. try to keep the token validationa and user finding login in auth middlewares and keep the request handles will be clean and clear.
+8. validations or logic related to schema models like USER. write schema methods.
+9. These schema methods, will can be resused, and our code will clean.
 
 ## Basic Steps for Authentication:
 
@@ -126,4 +128,35 @@ we can expires the cookies by passing the expires object to the cookies
 const jwtToken = jwt.sign({ _id: _id }, "JAVASCRIPT@123", {
   expiresIn: "7d",
 });
+```
+
+### schema methods
+
+#### schem method creation
+
+```javascript
+// user.js file
+
+// don't user arrow methods, it won't work due to this keyword.
+userSchema.methods.validateUserPassword = async function (userInputPassword) {
+  try {
+    const user = this;
+    const passwordHash = user.password;
+
+    const isPasswordValid = await bcrypt.compare(
+      userInputPassword,
+      passwordHash
+    );
+
+    return isPasswordValid;
+  } catch (e) {
+    console.log("ERROR: " + e.messasge);
+  }
+};
+```
+
+#### schem method usage
+
+```javascript
+const isPasswordValid = await user.validateUserPassword(userInputPassword);
 ```

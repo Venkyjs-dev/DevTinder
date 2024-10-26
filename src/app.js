@@ -53,17 +53,15 @@ app.post("/login", async (req, res) => {
     if (!user) {
       throw new Error("Invalid creditials");
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const userInputPassword = password;
+    const isPasswordValid = await user.validateUserPassword(userInputPassword);
 
     if (!isPasswordValid) {
       throw new Error("Invalid creditentials");
     } else {
-      const _id = user._id;
-      const jwtToken = jwt.sign({ _id: _id }, "JAVASCRIPT@123", {
-        expiresIn: "7d",
-      });
+      const jwtToken = await user.getJWT();
 
-      res.cookie("token", jwtToken, { expires: "1d" });
+      res.cookie("token", jwtToken, { expires: new Date(Date.now() + 900000) });
       res.send("Login successfull!!!");
     }
   } catch (e) {
