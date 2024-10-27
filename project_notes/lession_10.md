@@ -7,6 +7,10 @@
 3. The client stores the cookie.
 4. For subsequent requests, the client sends the cookie to the server along with the request.
 5. The server checks the validity of the token inside the cookie for every request. If valid, it sends a response; if not, it denies access.
+6. write a auth middle ware and use that middle ware in the apis, which are needs to authencated.
+7. try to keep the token validationa and user finding login in auth middlewares and keep the request handles will be clean and clear.
+8. validations or logic related to schema models like USER. write schema methods.
+9. These schema methods, will can be resused, and our code will clean.
 
 ## Basic Steps for Authentication:
 
@@ -36,9 +40,6 @@
 
    //create jwt token, by passing id info and secreat key
    const jwtToken = jwt.sign({ _id: _id }, "JAVASCRIPT@123");
-
-   // put the token in cookie and send to client
-   res.cookie("token", jwtToken);
    ```
 
 5. **Step 5**: Place the token in a cookie and send it to the client.
@@ -92,6 +93,12 @@ const user = await User.findById(id);
 - Install `jsonwebtoken` → In Progress.
 - In the login API, after validating the email and password, create a JWT token and send it to the user in a cookie.
 - Read the cookie in the `GET /profile` API and find the logged-in user.
+- Implement user auth middleware. → done
+- Add user auth middleware in profile API and new connection request API. → done
+- Set the expiry of jwt token to 7 days.
+- Set the expiry of cookies to 7 days
+- Create a user schema method to get JWT → done
+- Create a user schema method to validate the password. →done
 
 ## Questions:
 
@@ -99,6 +106,59 @@ const user = await User.findById(id);
 
 A JWT (JSON Web Token) is a compact, URL-safe token that represents claims between two parties. It is used for securely transmitting information.
 
+Basically token expiries depends the application, standard time 7days.
+
 ### What are Cookies?
 
 Cookies are small pieces of data stored on the client-side, which the server can send to identify and track users across requests.
+
+### how to expires a cookie
+
+we can expires the cookies by passing the expires object to the cookies
+
+```javascript
+// this cookie will be expires in 1 day.
+res.cookie("token", jwtToken, { expires: "1d" });
+```
+
+### how to expires a JWT
+
+we can expires the cookies by passing the expires object to the cookies
+
+```javascript
+// this jwt token will be expires in 7 day.
+const jwtToken = jwt.sign({ _id: _id }, "JAVASCRIPT@123", {
+  expiresIn: "7d",
+});
+```
+
+### schema methods
+
+#### schem method creation
+
+```javascript
+// user.js file
+
+// don't user arrow methods, it won't work due to this keyword.
+userSchema.methods.validateUserPassword = async function (userInputPassword) {
+  try {
+    const user = this;
+    const passwordHash = user.password;
+
+    const isPasswordValid = await bcrypt.compare(
+      userInputPassword,
+      passwordHash
+    );
+
+    return isPasswordValid;
+  } catch (e) {
+    console.log("ERROR: " + e.messasge);
+  }
+};
+```
+
+#### schem method usage
+
+```javascript
+const isPasswordValid = await user.validateUserPassword(userInputPassword);
+```
