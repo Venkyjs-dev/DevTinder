@@ -97,6 +97,8 @@ const user = await User.findById(id);
 - Add user auth middleware in profile API and new connection request API. → done
 - Set the expiry of jwt token to 7 days.
 - Set the expiry of cookies to 7 days
+- Create a user schema method to get JWT → done
+- Create a user schema method to validate the password. →done
 
 ## Questions:
 
