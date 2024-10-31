@@ -31,6 +31,8 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      minLength: 4,
+      maxLength: 50,
     },
     age: {
       type: Number,
@@ -47,9 +49,16 @@ const userSchema = new mongoose.Schema(
     about: {
       type: String,
       default: "This is sample about text",
+      minLength: 4,
+      maxLength: 50,
     },
     skills: {
       type: [String],
+      validate(value) {
+        if (value.length > 15) {
+          throw new Error("only 15 skills can add");
+        }
+      },
     },
   },
   { timestamps: true }
