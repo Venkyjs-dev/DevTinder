@@ -3,19 +3,12 @@ const requestRouter = express.Router();
 const { userAuth } = require("../middlewares/auth.js");
 const ConnectionRequest = require("../model/connectionRequest.js");
 const User = require("../model/user.js");
+const mongoose = require("mongoose");
 
 requestRouter.post(
   "/request/send/:status/:userId",
   userAuth,
   async (req, res) => {
-    // main pupose --> get send data from user and save it in DB --> fromUserId, toUserId, status
-    // steps
-    // validate fields commming from user
-    // save data in DB
-    // think corner cases
-    // check the toUserId user present in the DB or not. --> done
-    // A can send connection to B | if connection request send, B can not send to A |  A canot send to himself
-
     try {
       const fromUserId = req.user._id;
       const toUserId = req.params.userId;
@@ -49,6 +42,52 @@ requestRouter.post(
 
       await connectionRequest.save();
       res.send(`${req.user.firstName} ${status} ${toUser.firstName}`);
+    } catch (e) {
+      res.status(400).send("Error: " + e.message);
+    }
+  }
+);
+
+requestRouter.post(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+      const { status, requestId } = req.params;
+
+      const allowedStatus = ["accepted", "rejected"];
+
+      if (!allowedStatus.includes(status)) {
+        return res.status(400).json({
+          messsage: "Invalid status",
+        });
+      }
+
+      const loggedInUserId = loggedInUser._id;
+
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: requestId,
+        toUserId: loggedInUserId,
+        status: "interested",
+      });
+
+      console.log(connectionRequest, "connectionRequest -->");
+
+      if (!connectionRequest) {
+        return res.status(401).json({
+          message: "Connection request not found",
+        });
+      }
+
+      connectionRequest.status = status;
+
+      const data = await connectionRequest.save();
+
+      res.status(200).json({
+        message: `Connection request ${status}`,
+        data,
+      });
     } catch (e) {
       res.status(400).send("Error: " + e.message);
     }
