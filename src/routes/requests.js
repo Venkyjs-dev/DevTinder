@@ -3,7 +3,6 @@ const requestRouter = express.Router();
 const { userAuth } = require("../middlewares/auth.js");
 const ConnectionRequest = require("../model/connectionRequest.js");
 const User = require("../model/user.js");
-const mongoose = require("mongoose");
 
 requestRouter.post(
   "/request/send/:status/:userId",
@@ -71,8 +70,6 @@ requestRouter.post(
         toUserId: loggedInUserId,
         status: "interested",
       });
-
-      console.log(connectionRequest, "connectionRequest -->");
 
       if (!connectionRequest) {
         return res.status(401).json({
